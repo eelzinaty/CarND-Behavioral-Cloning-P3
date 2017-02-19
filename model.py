@@ -2,11 +2,13 @@ import os
 import argparse
 from images_generator import load_data_from_frames, load_training_validation_df, data_generator, sampling_data
 import numpy as np
+import cv2
 
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
 from keras.layers import Dense, Dropout, Flatten, Lambda, ELU
 from keras.layers.convolutional import Convolution2D
+from keras.layers import Cropping2D
 # Fix error with TF and Keras
 import tensorflow as tf
 
@@ -20,7 +22,8 @@ WEIGHT_HOME = os.path.join(SAVE_HOME, "weight.json")
 def get_comma_ai_model(shape):
     model = Sequential()
     #model.add(Lambda(lambda x: x / 127.5 - 1.,input_shape=shape))
-    model.add(Lambda(lambda x: x/255 - 0.5, input_shape=shape))
+    model.add(Cropping2D(cropping=((65, 20), (0, 0)), input_shape=(160, 320, 3)))
+    model.add(Lambda(lambda x: x/255 - 0.5))
     model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same"))
     model.add(ELU())
     model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
