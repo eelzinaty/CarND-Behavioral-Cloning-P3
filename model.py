@@ -1,6 +1,7 @@
 import os
 import argparse
-from images_generator import load_data_from_frames, load_training_validation_df, data_generator
+from images_generator import load_data_from_frames, load_training_validation_df, data_generator, sampling_data
+import numpy as np
 
 from keras.models import Sequential
 from keras.callbacks import ModelCheckpoint
@@ -63,6 +64,7 @@ if __name__ == "__main__":
     # parser.add_argument('--host', type=str, default="localhost", help='Data server ip address.')
     # parser.add_argument('--port', type=int, default=5557, help='Port of server.')
     # parser.add_argument('--val_port', type=int, default=5556, help='Port of server for validation dataset.')
+    parser.add_argument('--visualize', type=int, default=0, help='Only visualize data.')
     parser.add_argument('--batch', type=int, default=64, help='Batch size.')
     parser.add_argument('--epoch', type=int, default=200, help='Number of epochs.')
     parser.add_argument('--epochsize', type=int, default=10000, help='How many frames per epoch.')
@@ -72,46 +74,56 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     all_df = load_data_from_frames()
-    training_df, validation_df = load_training_validation_df(all_df)
 
-    n = training_df.shape[0]
-    batch_size = 64
-    samples_per_epoch = int(n / batch_size)
+    if args.visualize == 1:
+        from visualize import visualize_data_histogram, visualize_p_data_histogram
 
-    # Create training and validation generators
-    train_gen = data_generator(training_df, batch_size=batch_size)
-    validation_gen = data_generator(validation_df, batch_size=batch_size)
+        #visualize_data_histogram(np.array([row['angle'] for i, row in all_df.iterrows()]))
+        #visualize_p_data_histogram(all_df)
+        all_df = sampling_data(all_df)
+        visualize_p_data_histogram(all_df)
+        #sampling_data(all_df)
 
-    #X_batch, y_batch = next(train_gen)
-    input_shape = (160, 320, 3)
-    model = get_comma_ai_model(input_shape)
+    else:
+        training_df, validation_df = load_training_validation_df(all_df)
+        n = training_df.shape[0]
+        batch_size = 64
+        samples_per_epoch = int(n / batch_size)
 
-    if not os.path.exists(SAVE_HOME):
-        os.makedirs(SAVE_HOME)
+        # Create training and validation generators
+        train_gen = data_generator(training_df, batch_size=batch_size)
+        validation_gen = data_generator(validation_df, batch_size=batch_size)
 
-    # Create checkpoint at which model weights are to be saved
-    checkpoint = ModelCheckpoint(MODEL_HOME, monitor='val_loss', verbose=0,
-                                 save_best_only=True, save_weights_only=False, mode='auto')
+        #X_batch, y_batch = next(train_gen)
+        input_shape = (160, 320, 3)
+        model = get_comma_ai_model(input_shape)
 
-    # Train the model
-    model.fit_generator(train_gen, samples_per_epoch=samples_per_epoch * batch_size, nb_epoch=10, callbacks=[checkpoint],
-                        validation_data=validation_gen, nb_val_samples=validation_df.shape[0])
+        if not os.path.exists(SAVE_HOME):
+            os.makedirs(SAVE_HOME)
 
-    # Save the model architecture
-    with open(WEIGHT_HOME, "w") as file:
-        file.write(model.to_json())
+        # Create checkpoint at which model weights are to be saved
+        checkpoint = ModelCheckpoint(MODEL_HOME, monitor='val_loss', verbose=0,
+                                     save_best_only=True, save_weights_only=False, mode='auto')
 
-    print("Model has been trained and saved.")
+        # Train the model
+        model.fit_generator(train_gen, samples_per_epoch=samples_per_epoch * batch_size, nb_epoch=10, callbacks=[checkpoint],
+                            validation_data=validation_gen, nb_val_samples=validation_df.shape[0])
+
+        # Save the model architecture
+        with open(WEIGHT_HOME, "w") as file:
+            file.write(model.to_json())
+
+        print("Model has been trained and saved.")
 
 
 
-    #model.fit_generator(
-        #gen(20, args.host, port=args.port),
-        #samples_per_epoch=10000,
-        #nb_epoch=args.epoch,
-        #validation_data=gen(20, args.host, port=args.val_port),
-        #nb_val_samples=1000
-    #)
+        #model.fit_generator(
+            #gen(20, args.host, port=args.port),
+            #samples_per_epoch=10000,
+            #nb_epoch=args.epoch,
+            #validation_data=gen(20, args.host, port=args.val_port),
+            #nb_val_samples=1000
+        #)
 
 
 
