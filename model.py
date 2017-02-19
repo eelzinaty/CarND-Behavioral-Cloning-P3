@@ -33,7 +33,7 @@ def get_comma_ai_model(shape):
     model.add(ELU())
     model.add(Dense(1))
 
-    model.compile(optimizer="adam", loss="mse")
+    model.compile(optimizer="adam", loss="mse", metrics=['accuracy'])
 
     return model
 
@@ -52,7 +52,7 @@ def get_nvidia_model(shape):
     model.add(Dense(10, activation='relu'))
     model.add(Dense(1))
 
-    model.compile(optimizer="adam", loss="mse")
+    model.compile(optimizer="adam", loss="mse", metrics=['accuracy'])
 
     return model
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
                                  save_best_only=True, save_weights_only=False, mode='auto')
 
     # Train the model
-    model.fit_generator(train_gen, samples_per_epoch=samples_per_epoch * batch_size, nb_epoch=1, callbacks=[checkpoint],
+    model.fit_generator(train_gen, samples_per_epoch=samples_per_epoch * batch_size, nb_epoch=10, callbacks=[checkpoint],
                         validation_data=validation_gen, nb_val_samples=validation_df.shape[0])
 
     # Save the model architecture
