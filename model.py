@@ -85,6 +85,7 @@ if __name__ == "__main__":
         #sampling_data(all_df)
 
     else:
+        all_df = sampling_data(all_df)
         training_df, validation_df = load_training_validation_df(all_df)
         n = training_df.shape[0]
         batch_size = 64
