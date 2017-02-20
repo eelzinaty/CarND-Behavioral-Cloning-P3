@@ -4,6 +4,7 @@ import pandas as pd
 import cv2
 from scipy import ndimage
 import skimage
+from sklearn.utils import shuffle
 
 SIMULATOR_HOME = "../data/"
 DRIVING_LOG_FILE = "driving_log.csv"
@@ -93,12 +94,13 @@ def data_generator(df, batch_size=128, is_training=1):
                     X_batch.append(translateImage(rotateImage(s_img)))
                     y_batch.append(angle)
                     # Flipped & Speckled image
-                    f_s_img = get_blurred_image(get_flipped_image(img))
+                    f_s_img = get_speckled_image(get_flipped_image(img))
                     X_batch.append(f_s_img)
                     y_batch.append(-angle)
                     # Flipped & Speckled with random Translate and Rotate
                     X_batch.append(translateImage(rotateImage(f_s_img)))
                     y_batch.append(-angle)
+                    X_batch, batch_y = shuffle(X_batch, y_batch)
 
             #X_batch = np.array([get_image(row) for i, row in df_batch.iterrows()])
             #y_batch = np.array([row['angle'] for i, row in df_batch.iterrows()])
