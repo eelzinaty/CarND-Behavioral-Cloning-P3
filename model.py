@@ -1,6 +1,6 @@
 import os
 import argparse
-from images_generator import load_data_from_frames, load_training_validation_df, data_generator, sampling_data
+from images_generator import load_data_from_frames, load_training_validation_df, data_generator, sampling_data, data_generator_for_vis
 import numpy as np
 import cv2
 
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     # parser.add_argument('--val_port', type=int, default=5556, help='Port of server for validation dataset.')
     parser.add_argument('--visualize', type=int, default=0, help='Only visualize data.')
     parser.add_argument('--batch', type=int, default=64, help='Batch size.')
-    parser.add_argument('--epoch', type=int, default=200, help='Number of epochs.')
-    parser.add_argument('--epochsize', type=int, default=10000, help='How many frames per epoch.')
+    parser.add_argument('--epoch', type=int, default=2, help='Number of epochs.')
+    parser.add_argument('--epochsize', type=int, default=100000, help='How many frames per epoch.')
     parser.add_argument('--model', type=str, default="ai", help='Type of model to use.')
     parser.add_argument('--sample', type=str, default="yes", help='sample data.')
     parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='Multiple path output.')
@@ -82,12 +82,15 @@ if __name__ == "__main__":
     all_df = load_data_from_frames()
 
     if args.visualize == 1:
-        from visualize import visualize_data_histogram, visualize_p_data_histogram
+        from visualize import visualize_data_histogram, visualize_p_data_histogram, display_images
 
         #visualize_data_histogram(np.array([row['angle'] for i, row in all_df.iterrows()]))
         #visualize_p_data_histogram(all_df)
-        all_df = sampling_data(all_df)
+        #all_df = sampling_data(all_df)
         visualize_p_data_histogram(all_df)
+        #one_df = all_df[0]
+        x,y = data_generator_for_vis(all_df)
+        display_images(x,y)
         #sampling_data(all_df)
 
     else:

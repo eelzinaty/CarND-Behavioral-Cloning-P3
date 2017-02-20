@@ -9,29 +9,40 @@ from sklearn.utils import shuffle
 SIMULATOR_HOME = "../data/"
 DRIVING_LOG_FILE = "driving_log.csv"
 DRIVING_LOG_FILE_PATH = os.path.join(SIMULATOR_HOME, DRIVING_LOG_FILE)
-
 IMAGE_PATH = os.path.join(SIMULATOR_HOME, "IMG")
-
-steering_offset = 0.2
-
 driving_log = pd.read_csv(DRIVING_LOG_FILE_PATH)
 driving_log.columns = ["center", "left", "right", "steering", "throttle", "brake", "speed"]
+driving_log["new"] = 0
+
+MY_DATA_HOME = "../mydata/"
+MY_LOG_FILE_PATH = os.path.join(MY_DATA_HOME, DRIVING_LOG_FILE)
+MY_IMAGE_PATH = os.path.join(MY_DATA_HOME, "IMG")
+my_driving_log = pd.read_csv(MY_LOG_FILE_PATH)
+my_driving_log.columns = ["center", "left", "right", "steering", "throttle", "brake", "speed"]
+my_driving_log["new"] = 1
+
+all_driving = pd.concat([driving_log,my_driving_log]).reset_index(drop=True)
 
 ############################
 # Functions for Loading data
 ############################
 
 def load_data_from_frames():
-    df_cn = driving_log.copy()[["center", "steering"]]
-    df_cn.columns = ["image_path", "angle"]
+    offset = 1.2
+    dist = 100.0
 
-    df_lf = driving_log.copy()[["left", "steering"]]
-    df_lf.columns = ["image_path", "angle"]
-    df_lf.angle += steering_offset
+    df_cn = all_driving.copy()[["center", "steering", "new"]]
+    df_cn.columns = ["image_path", "angle", "new"]
 
-    df_rh = driving_log.copy()[["right", "steering"]]
-    df_rh.columns = ["image_path", "angle"]
-    df_rh.angle -= steering_offset
+    df_lf = all_driving.copy()[["left", "steering", "new"]]
+    df_lf.columns = ["image_path", "angle", "new"]
+    dsteering = -offset / dist * 360 / (2 * np.pi) / 25.0
+    df_lf.angle += dsteering
+
+    df_rh = all_driving.copy()[["right", "steering", "new"]]
+    df_rh.columns = ["image_path", "angle", "new"]
+    dsteering = offset / dist * 360 / (2 * np.pi) / 25.0
+    df_rh.angle -= dsteering
 
     df_all = pd.concat([df_cn, df_lf, df_rh]).reset_index(drop=True)
     return df_all
@@ -41,6 +52,49 @@ def load_training_validation_df(all_data):
     validation_data = all_data.drop(train_data.index)
     return train_data, validation_data
 
+
+def data_generator_for_vis(df, index=0, batch_size=1):
+    m = np.random.randint(0, len(df.index))
+    df_batch = df[m: m + batch_size]
+
+    # Ignoring the last batch which is smaller than the requested batch size
+    #if (df_batch.shape[0] == batch_size):
+    X_batch = []
+    y_batch = []
+    for i , row in df_batch.iterrows():
+        img = get_image(row) #row["image_path"].strip()
+        angle = row["angle"]
+        # Normal image
+        X_batch.append(img)
+        y_batch.append(angle)
+        # Random brightness
+        b_img = random_brightness(img)
+        # Random Shadow
+        sh_img = add_random_shadow(b_img)
+        # Random Sheer
+        s_img, s_angle = random_shear(sh_img, angle, shear_range=20)
+        # Normal with random Translate
+        t_img, t_angle = trans_image(s_img, s_angle)
+        X_batch.append(t_img)
+        y_batch.append(t_angle)
+        # Flipped image
+        f_img = get_flipped_image(img)
+        # Flipped Random brightness
+        fb_img = random_brightness(f_img)
+        # Flipped Random Shadow
+        fsh_img = add_random_shadow(fb_img)
+        # Flipped Random Sheer
+        fs_img, fs_angle = random_shear(fsh_img, -angle, shear_range=40)
+        # Flipped Normal with random Translate
+        ft_img, ft_angle = trans_image(fs_img, fs_angle)
+        X_batch.append(ft_img)
+        y_batch.append(ft_angle)
+
+    #X_batch, batch_y = shuffle(X_batch, y_batch)
+
+    #X_batch = np.array([get_image(row) for i, row in df_batch.iterrows()])
+    #y_batch = np.array([row['angle'] for i, row in df_batch.iterrows()])
+    return (np.array(X_batch), np.array(y_batch))
 
 def data_generator(df, batch_size=128, is_training=1):
     n_rows = df.shape[0]
@@ -90,7 +144,6 @@ def data_generator(df, batch_size=128, is_training=1):
             #X_batch = np.array([get_image(row) for i, row in df_batch.iterrows()])
             #y_batch = np.array([row['angle'] for i, row in df_batch.iterrows()])
             yield (np.array(X_batch), np.array(y_batch))
-
 
 def old(f_img,img,angle,X_batch,y_batch):
     # Flipped with random Translate and Rotate
@@ -142,9 +195,16 @@ def get_image(row):
     #image_name = ops[0]
 
     #ops = ops[1:]
-
-    image = cv2.imread(os.path.join(SIMULATOR_HOME, image_name))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if row["new"] == 0:
+        #print(os.path.join(SIMULATOR_HOME, image_name))
+        image = cv2.imread(os.path.join(SIMULATOR_HOME, image_name))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image
+    else:
+        #print(os.path.join(MY_DATA_HOME, image_name))
+        image = cv2.imread(os.path.join(MY_DATA_HOME, image_name))
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image
 
     #for op in ops:
         #if op == "INV":
@@ -156,7 +216,7 @@ def get_image(row):
         #elif op == "NOISE":
             #image = get_speckled_image(image)
 
-    return image
+    #return image
 
 def pre_process(image, top_prop=0.35, bottom_prop=0.1):
     """
