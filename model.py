@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
         # Create training and validation generators
         train_gen = data_generator(training_df, batch_size=batch_size)
-        validation_gen = data_generator(validation_df, batch_size=batch_size)
+        validation_gen = data_generator(validation_df, batch_size=batch_size, is_training=0)
 
         #X_batch, y_batch = next(train_gen)
         input_shape = (160, 320, 3)

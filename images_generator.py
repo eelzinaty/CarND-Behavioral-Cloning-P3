@@ -41,7 +41,7 @@ def load_training_validation_df(all_data):
     return train_data, validation_data
 
 
-def data_generator(df, batch_size=128):
+def data_generator(df, batch_size=128, is_training=1):
     n_rows = df.shape[0]
     while True:
         # Shuffle the data frame rows after every complete cycle through the data
@@ -52,56 +52,57 @@ def data_generator(df, batch_size=128):
 
             # Ignoring the last batch which is smaller than the requested batch size
             #if (df_batch.shape[0] == batch_size):
-            X_batch = np.array([])
-            y_batch = np.array([])
+            X_batch = []
+            y_batch = []
             for i , row in df_batch.iterrows():
                 img = get_image(row) #row["image_path"].strip()
                 angle = row["angle"]
                 # Normal image
                 X_batch.append(img)
                 y_batch.append(angle)
-                # Normal with random Translate and Rotate
-                X_batch.append(translateImage(rotateImage(img)))
-                y_batch.append(angle)
-                # Flipped image
-                f_img = get_flipped_image(img)
-                X_batch.append(f_img)
-                y_batch.append(-angle)
-                # Flipped with random Translate and Rotate
-                X_batch.append(translateImage(rotateImage(f_img)))
-                y_batch.append(-angle)
-                # blurred image
-                b_img = get_blurred_image(img)
-                X_batch.append(b_img)
-                y_batch.append(angle)
-                # blurred with random Translate and Rotate
-                X_batch.append(translateImage(rotateImage(b_img)))
-                y_batch.append(angle)
-                # Flipped & Blurred image
-                f_b_img = get_blurred_image(get_flipped_image(img))
-                X_batch.append(f_b_img)
-                y_batch.append(-angle)
-                # Flipped & Blurred with random Translate and Rotate
-                X_batch.append(translateImage(rotateImage(f_b_img)))
-                y_batch.append(-angle)
-                # Speckled image
-                s_img = get_speckled_image(img)
-                X_batch.append(s_img)
-                y_batch.append(angle)
-                # Speckled with random Translate and Rotate
-                X_batch.append(translateImage(rotateImage(s_img)))
-                y_batch.append(angle)
-                # Flipped & Speckled image
-                f_s_img = get_blurred_image(get_flipped_image(img))
-                X_batch.append(f_s_img)
-                y_batch.append(-angle)
-                # Flipped & Speckled with random Translate and Rotate
-                X_batch.append(translateImage(rotateImage(f_s_img)))
-                y_batch.append(-angle)
+                if is_training == 1:
+                    # Normal with random Translate and Rotate
+                    X_batch.append(translateImage(rotateImage(img)))
+                    y_batch.append(angle)
+                    # Flipped image
+                    f_img = get_flipped_image(img)
+                    X_batch.append(f_img)
+                    y_batch.append(-angle)
+                    # Flipped with random Translate and Rotate
+                    X_batch.append(translateImage(rotateImage(f_img)))
+                    y_batch.append(-angle)
+                    # blurred image
+                    b_img = get_blurred_image(img)
+                    X_batch.append(b_img)
+                    y_batch.append(angle)
+                    # blurred with random Translate and Rotate
+                    X_batch.append(translateImage(rotateImage(b_img)))
+                    y_batch.append(angle)
+                    # Flipped & Blurred image
+                    f_b_img = get_blurred_image(get_flipped_image(img))
+                    X_batch.append(f_b_img)
+                    y_batch.append(-angle)
+                    # Flipped & Blurred with random Translate and Rotate
+                    X_batch.append(translateImage(rotateImage(f_b_img)))
+                    y_batch.append(-angle)
+                    # Speckled image
+                    s_img = get_speckled_image(img)
+                    X_batch.append(s_img)
+                    y_batch.append(angle)
+                    # Speckled with random Translate and Rotate
+                    X_batch.append(translateImage(rotateImage(s_img)))
+                    y_batch.append(angle)
+                    # Flipped & Speckled image
+                    f_s_img = get_blurred_image(get_flipped_image(img))
+                    X_batch.append(f_s_img)
+                    y_batch.append(-angle)
+                    # Flipped & Speckled with random Translate and Rotate
+                    X_batch.append(translateImage(rotateImage(f_s_img)))
+                    y_batch.append(-angle)
 
             #X_batch = np.array([get_image(row) for i, row in df_batch.iterrows()])
             #y_batch = np.array([row['angle'] for i, row in df_batch.iterrows()])
-            yield X_batch, y_batch
+            yield (np.array(X_batch), np.array(y_batch))
 
 
 
