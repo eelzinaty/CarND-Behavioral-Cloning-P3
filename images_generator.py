@@ -46,7 +46,7 @@ def data_generator(df, batch_size=128, is_training=1):
     n_rows = df.shape[0]
     while True:
         # Shuffle the data frame rows after every complete cycle through the data
-        df = df.sample(frac=1).reset_index(drop=True)
+        #df = df.sample(frac=1).reset_index(drop=True)
 
         for index in range(0, n_rows, batch_size):
             df_batch = df[index: index + batch_size]
@@ -62,51 +62,82 @@ def data_generator(df, batch_size=128, is_training=1):
                 X_batch.append(img)
                 y_batch.append(angle)
                 if is_training == 1:
-                    # Normal with random Translate and Rotate
-                    X_batch.append(translateImage(rotateImage(img)))
+                    # Random brightness
+                    b_img = random_brightness(img)
+                    X_batch.append(b_img)
                     y_batch.append(angle)
+                    # Random Shadow
+                    sh_img = add_random_shadow(img)
+                    X_batch.append(sh_img)
+                    y_batch.append(angle)
+                    # Random Sheer
+                    s_img, s_angle = random_shear(img, angle, shear_range=40)
+                    X_batch.append(s_img)
+                    y_batch.append(s_angle)
+                    # Normal with random Translate
+                    t_img, t_angle = trans_image(img, angle)
+                    X_batch.append(t_img)
+                    y_batch.append(t_angle)
                     # Flipped image
                     f_img = get_flipped_image(img)
                     X_batch.append(f_img)
                     y_batch.append(-angle)
-                    # Flipped with random Translate and Rotate
-                    X_batch.append(translateImage(rotateImage(f_img)))
+                    # Flipped Random brightness
+                    fb_img = random_brightness(f_img)
+                    X_batch.append(fb_img)
                     y_batch.append(-angle)
-                    # blurred image
-                    b_img = get_blurred_image(img)
-                    X_batch.append(b_img)
-                    y_batch.append(angle)
-                    # blurred with random Translate and Rotate
-                    X_batch.append(translateImage(rotateImage(b_img)))
-                    y_batch.append(angle)
-                    # Flipped & Blurred image
-                    f_b_img = get_blurred_image(get_flipped_image(img))
-                    X_batch.append(f_b_img)
+                    # Flipped Random Shadow
+                    fsh_img = add_random_shadow(f_img)
+                    X_batch.append(fsh_img)
                     y_batch.append(-angle)
-                    # Flipped & Blurred with random Translate and Rotate
-                    X_batch.append(translateImage(rotateImage(f_b_img)))
-                    y_batch.append(-angle)
-                    # Speckled image
-                    s_img = get_speckled_image(img)
-                    X_batch.append(s_img)
-                    y_batch.append(angle)
-                    # Speckled with random Translate and Rotate
-                    X_batch.append(translateImage(rotateImage(s_img)))
-                    y_batch.append(angle)
-                    # Flipped & Speckled image
-                    f_s_img = get_speckled_image(get_flipped_image(img))
-                    X_batch.append(f_s_img)
-                    y_batch.append(-angle)
-                    # Flipped & Speckled with random Translate and Rotate
-                    X_batch.append(translateImage(rotateImage(f_s_img)))
-                    y_batch.append(-angle)
-                    X_batch, batch_y = shuffle(X_batch, y_batch)
+                    # Flipped Random Sheer
+                    fs_img, fs_angle = random_shear(f_img, -angle, shear_range=40)
+                    X_batch.append(fs_img)
+                    y_batch.append(fs_angle)
+                    # Flipped Normal with random Translate
+                    ft_img, ft_angle = trans_image(f_img, -angle)
+                    X_batch.append(ft_img)
+                    y_batch.append(ft_angle)
+
+            X_batch, batch_y = shuffle(X_batch, y_batch)
 
             #X_batch = np.array([get_image(row) for i, row in df_batch.iterrows()])
             #y_batch = np.array([row['angle'] for i, row in df_batch.iterrows()])
             yield (np.array(X_batch), np.array(y_batch))
 
 
+def old(f_img,img,angle,X_batch,y_batch):
+    # Flipped with random Translate and Rotate
+    X_batch.append(translateImage(rotateImage(f_img)))
+    y_batch.append(-angle)
+    # blurred image
+    b_img = get_blurred_image(img)
+    X_batch.append(b_img)
+    y_batch.append(angle)
+    # blurred with random Translate and Rotate
+    X_batch.append(translateImage(rotateImage(b_img)))
+    y_batch.append(angle)
+    # Flipped & Blurred image
+    f_b_img = get_blurred_image(get_flipped_image(img))
+    X_batch.append(f_b_img)
+    y_batch.append(-angle)
+    # Flipped & Blurred with random Translate and Rotate
+    X_batch.append(translateImage(rotateImage(f_b_img)))
+    y_batch.append(-angle)
+    # Speckled image
+    s_img = get_speckled_image(img)
+    X_batch.append(s_img)
+    y_batch.append(angle)
+    # Speckled with random Translate and Rotate
+    X_batch.append(translateImage(rotateImage(s_img)))
+    y_batch.append(angle)
+    # Flipped & Speckled image
+    f_s_img = get_speckled_image(get_flipped_image(img))
+    X_batch.append(f_s_img)
+    y_batch.append(-angle)
+    # Flipped & Speckled with random Translate and Rotate
+    X_batch.append(translateImage(rotateImage(f_s_img)))
+    y_batch.append(-angle)
 
 ############################
 # Functions for Loading Images
@@ -127,7 +158,7 @@ def get_image(row):
     #ops = ops[1:]
 
     image = cv2.imread(os.path.join(SIMULATOR_HOME, image_name))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     #for op in ops:
         #if op == "INV":
@@ -224,3 +255,61 @@ def rotateImage(image):
     M = cv2.getRotationMatrix2D((cols/2,rows/2),theta,1)
     dst = cv2.warpAffine(image,M,(cols,rows))
     return dst
+
+
+def trans_image(image, steer, tx_range=32,ty_range=32):
+    # Translation
+    rows,cols,_ = image.shape
+    tr_x = tx_range * np.random.uniform() - tx_range / 2
+    steer_ang = steer + tr_x / tx_range * 2 * .2
+    tr_y = ty_range * np.random.uniform() - ty_range / 2
+    # tr_y = 0
+    Trans_M = np.float32([[1, 0, tr_x], [0, 1, tr_y]])
+    image_tr = cv2.warpAffine(image, Trans_M, (cols, rows))
+
+    return image_tr, steer_ang
+
+def add_random_shadow(image):
+    top_y = 320*np.random.uniform()
+    top_x = 0
+    bot_x = 160
+    bot_y = 320*np.random.uniform()
+    image_hls = cv2.cvtColor(image,cv2.COLOR_RGB2HLS)
+    shadow_mask = 0*image_hls[:,:,1]
+    X_m = np.mgrid[0:image.shape[0],0:image.shape[1]][0]
+    Y_m = np.mgrid[0:image.shape[0],0:image.shape[1]][1]
+    shadow_mask[((X_m-top_x)*(bot_y-top_y) -(bot_x - top_x)*(Y_m-top_y) >=0)]=1
+    #random_bright = .25+.7*np.random.uniform()
+    if np.random.randint(2)==1:
+        random_bright = .5
+        cond1 = shadow_mask==1
+        cond0 = shadow_mask==0
+        if np.random.randint(2)==1:
+            image_hls[:,:,1][cond1] = image_hls[:,:,1][cond1]*random_bright
+        else:
+            image_hls[:,:,1][cond0] = image_hls[:,:,1][cond0]*random_bright
+    image = cv2.cvtColor(image_hls,cv2.COLOR_HLS2RGB)
+    return image
+
+
+def random_shear(image, steering, shear_range):
+    rows, cols, ch = image.shape
+    dx = np.random.randint(-shear_range, shear_range + 1)
+    #    print('dx',dx)
+    random_point = [cols / 2 + dx, rows / 2]
+    pts1 = np.float32([[0, rows], [cols, rows], [cols / 2, rows / 2]])
+    pts2 = np.float32([[0, rows], [cols, rows], random_point])
+    dsteering = dx / (rows / 2) * 360 / (2 * np.pi * 25.0) / 10.0
+    M = cv2.getAffineTransform(pts1, pts2)
+    image = cv2.warpAffine(image, M, (cols, rows), borderMode=1)
+    steering += dsteering
+
+    return image, steering
+
+
+def random_brightness(image):
+    image1 = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    random_bright = 1.0 + 0.1 * (2 * np.random.uniform() - 1.0)
+    image1[:, :, 2] = image1[:, :, 2] * random_bright
+    image1 = cv2.cvtColor(image1, cv2.COLOR_HSV2RGB)
+    return image1

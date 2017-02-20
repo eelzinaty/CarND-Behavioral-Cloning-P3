@@ -49,8 +49,8 @@ set_speed = 9
 controller.set_desired(set_speed)
 
 def preprocess_image(img):
-    new_img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
-    return new_img
+    #new_img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    return img
 
 
 @sio.on('telemetry')

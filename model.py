@@ -91,7 +91,7 @@ if __name__ == "__main__":
         all_df = sampling_data(all_df)
         training_df, validation_df = load_training_validation_df(all_df)
         n = training_df.shape[0]
-        batch_size = 16
+        batch_size = 8
         samples_per_epoch = n #int(n / batch_size)
 
         # Create training and validation generators
@@ -110,7 +110,7 @@ if __name__ == "__main__":
                                      save_best_only=True, save_weights_only=False, mode='auto')
 
         # Train the model
-        model.fit_generator(train_gen, samples_per_epoch=samples_per_epoch * 12, nb_epoch=10, callbacks=[checkpoint],
+        model.fit_generator(train_gen, samples_per_epoch=samples_per_epoch * 10, nb_epoch=args.epoch, callbacks=[checkpoint],
                             validation_data=validation_gen, nb_val_samples=validation_df.shape[0])
 
         # Save the model architecture
