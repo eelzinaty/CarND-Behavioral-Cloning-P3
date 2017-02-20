@@ -92,7 +92,7 @@ if __name__ == "__main__":
         training_df, validation_df = load_training_validation_df(all_df)
         n = training_df.shape[0]
         batch_size = 8
-        samples_per_epoch = n #int(n / batch_size)
+        samples_per_epoch = args.epochsize #int(n / batch_size)
 
         # Create training and validation generators
         train_gen = data_generator(training_df, batch_size=batch_size)
