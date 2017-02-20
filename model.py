@@ -44,6 +44,7 @@ def get_comma_ai_model(shape):
 # model developed by Nvidia
 def get_nvidia_model(shape):
     model = Sequential()
+    model.add(Cropping2D(cropping=((65, 20), (0, 0)), input_shape=(160, 320, 3)))
     model.add(Lambda(lambda x: x/255 - 0.5, input_shape=shape))
     model.add(Convolution2D(24, 5, 5, subsample=(2, 2), activation='relu'))
     model.add(Convolution2D(36, 5, 5, subsample=(2, 2), activation='relu'))
@@ -71,6 +72,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch', type=int, default=64, help='Batch size.')
     parser.add_argument('--epoch', type=int, default=200, help='Number of epochs.')
     parser.add_argument('--epochsize', type=int, default=10000, help='How many frames per epoch.')
+    parser.add_argument('--model', type=str, default="ai", help='Type of model to use.')
     parser.add_argument('--skipvalidate', dest='skipvalidate', action='store_true', help='Multiple path output.')
     parser.set_defaults(skipvalidate=False)
     parser.set_defaults(loadweights=False)
@@ -100,7 +102,11 @@ if __name__ == "__main__":
 
         #X_batch, y_batch = next(train_gen)
         input_shape = (160, 320, 3)
-        model = get_comma_ai_model(input_shape)
+
+        if args.model == "ai":
+            model = get_comma_ai_model(input_shape)
+        else:
+            model = get_nvidia_model(input_shape)
 
         if not os.path.exists(SAVE_HOME):
             os.makedirs(SAVE_HOME)
