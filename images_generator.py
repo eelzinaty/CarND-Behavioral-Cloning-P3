@@ -64,38 +64,24 @@ def data_generator(df, batch_size=128, is_training=1):
                 if is_training == 1:
                     # Random brightness
                     b_img = random_brightness(img)
-                    X_batch.append(b_img)
-                    y_batch.append(angle)
                     # Random Shadow
-                    sh_img = add_random_shadow(img)
-                    X_batch.append(sh_img)
-                    y_batch.append(angle)
+                    sh_img = add_random_shadow(b_img)
                     # Random Sheer
-                    s_img, s_angle = random_shear(img, angle, shear_range=40)
-                    X_batch.append(s_img)
-                    y_batch.append(s_angle)
+                    s_img, s_angle = random_shear(sh_img, angle, shear_range=40)
                     # Normal with random Translate
-                    t_img, t_angle = trans_image(img, angle)
+                    t_img, t_angle = trans_image(s_img, s_angle)
                     X_batch.append(t_img)
                     y_batch.append(t_angle)
                     # Flipped image
                     f_img = get_flipped_image(img)
-                    X_batch.append(f_img)
-                    y_batch.append(-angle)
                     # Flipped Random brightness
                     fb_img = random_brightness(f_img)
-                    X_batch.append(fb_img)
-                    y_batch.append(-angle)
                     # Flipped Random Shadow
-                    fsh_img = add_random_shadow(f_img)
-                    X_batch.append(fsh_img)
-                    y_batch.append(-angle)
+                    fsh_img = add_random_shadow(fb_img)
                     # Flipped Random Sheer
-                    fs_img, fs_angle = random_shear(f_img, -angle, shear_range=40)
-                    X_batch.append(fs_img)
-                    y_batch.append(fs_angle)
+                    fs_img, fs_angle = random_shear(fsh_img, -angle, shear_range=40)
                     # Flipped Normal with random Translate
-                    ft_img, ft_angle = trans_image(f_img, -angle)
+                    ft_img, ft_angle = trans_image(fs_img, fs_angle)
                     X_batch.append(ft_img)
                     y_batch.append(ft_angle)
 
