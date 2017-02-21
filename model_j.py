@@ -222,13 +222,13 @@ angles = np.array(angles)
 print('Before:', image_paths.shape, angles.shape)
 
 # print a histogram to see which steering angle ranges are most overrepresented
-num_bins = 23
-avg_samples_per_bin = len(angles) / num_bins
-hist, bins = np.histogram(angles, num_bins)
-width = 0.7 * (bins[1] - bins[0])
-center = (bins[:-1] + bins[1:]) / 2
-plt.bar(center, hist, align='center', width=width)
-plt.plot((np.min(angles), np.max(angles)), (avg_samples_per_bin, avg_samples_per_bin), 'k-')
+#num_bins = 23
+#avg_samples_per_bin = len(angles) / num_bins
+#hist, bins = np.histogram(angles, num_bins)
+#width = 0.7 * (bins[1] - bins[0])
+#center = (bins[:-1] + bins[1:]) / 2
+#plt.bar(center, hist, align='center', width=width)
+#plt.plot((np.min(angles), np.max(angles)), (avg_samples_per_bin, avg_samples_per_bin), 'k-')
 # plt.show()
 
 # determine keep probability for each bin: if below avg_samples_per_bin, keep all; otherwise keep prob is proportional
@@ -251,16 +251,16 @@ image_paths = np.delete(image_paths, remove_list, axis=0)
 angles = np.delete(angles, remove_list)
 
 # print histogram again to show more even distribution of steering angles
-hist, bins = np.histogram(angles, num_bins)
-plt.bar(center, hist, align='center', width=width)
-plt.plot((np.min(angles), np.max(angles)), (avg_samples_per_bin, avg_samples_per_bin), 'k-')
+#hist, bins = np.histogram(angles, num_bins)
+#plt.bar(center, hist, align='center', width=width)
+#plt.plot((np.min(angles), np.max(angles)), (avg_samples_per_bin, avg_samples_per_bin), 'k-')
 # plt.show()
 
 print('After:', image_paths.shape, angles.shape)
 
 # visualize a single batch of the data
-X, y = generate_training_data_for_visualization(image_paths, angles)
-visualize_dataset(X, y)
+#X, y = generate_training_data_for_visualization(image_paths, angles)
+#visualize_dataset(X, y)
 
 # split into train/test sets
 image_paths_train, image_paths_test, angles_train, angles_test = train_test_split(image_paths, angles,
