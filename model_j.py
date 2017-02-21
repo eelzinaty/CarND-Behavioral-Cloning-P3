@@ -345,7 +345,7 @@ if not just_checkin_the_data:
     X_test, y_test = generate_training_data_for_visualization(image_paths_test[:n], angles_test[:n], batch_size=n,
                                                               validation_flag=True)
     y_pred = model.predict(X_test, n, verbose=2)
-    visualize_dataset(X_test, y_test, y_pred)
+    #visualize_dataset(X_test, y_test, y_pred)
 
     # Save model data
     model.save_weights('./model_j.h5')
